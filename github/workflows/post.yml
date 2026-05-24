@@ -1,0 +1,63 @@
+name: Manage Posts
+on:
+  workflow_dispatch:
+    inputs:
+      text: { description: 'Post text or comment', required: false }
+      pass: { description: 'Password', required: true }
+      action: { description: 'add/delete/like/comment', required: true }
+      index: { description: 'Post index', required: false }
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check password
+        run: |
+          if [ "${{ inputs.pass }}"!= "${{ secrets.POST_PASS }}" ]; then
+            echo "Wrong password"; exit 1;
+          fi
+
+      - name: Update posts.json
+        run: |
+          mkdir -p data
+          python3 << 'EOF'
+import json, os, time
+path = 'data/posts.json'
+data = json.load(open(path, encoding='utf-8')) if os.path.exists(path) else []
+act = '${{ inputs.action }}'
+
+if act == 'add':
+    data.insert(0, {
+        'text': '${{ inputs.text }}',
+        'time': int(time.time()),
+        'likes': 0,
+        'comments': []
+    })
+elif act == 'delete':
+    idx = int('${{ inputs.index }}')
+    if 0 <= idx < len(data):
+        data.pop(idx)
+elif act == 'like':
+    idx = int('${{ inputs.index }}')
+    if 0 <= idx < len(data):
+        data[idx]['likes'] += 1
+elif act == 'comment':
+    idx = int('${{ inputs.index }}')
+    if 0 <= idx < len(data):
+        data[idx]['comments'].append('${{ inputs.text }}')
+
+with open(path, 'w', encoding='utf-8') as f:
+    json.dump(data, f, ensure_ascii=False, indent=2)
+EOF
+
+      - name: Commit
+        run: |
+          git config user.name "github-bot"
+          git config user.email "bot@github.com"
+          git add data/posts.json
+          git commit -m "update posts" || exit 0
+          git push

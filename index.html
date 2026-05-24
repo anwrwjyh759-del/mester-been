@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>صفحة المدرس</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  body {
+    font-family: 'Tajawal', sans-serif;
+    background: #0a0014;
+    margin: 0;
+    padding: 20px;
+    color: #e0e0e0;
+  }
+.container { max-width: 600px; margin: auto; }
+.header {
+    background: #1a0a2e;
+    color: #c084fc;
+    padding: 24px;
+    border-radius: 16px;
+    text-align: center;
+    margin-bottom: 24px;
+    border: 1px solid #7c3aed;
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.5), 0 0 40px rgba(124, 58, 237, 0.3);
+  }
+.header h2 {
+    text-shadow: 0 0 10px #a855f7, 0 0 20px #a855f7, 0 0 30px #a855f7;
+    margin: 0 0 12px 0;
+  }
+.header a {
+    color: #fff;
+    text-decoration: none;
+    background: #7c3aed;
+    padding: 10px 20px;
+    border-radius: 8px;
+    display: inline-block;
+    margin-top: 10px;
+    box-shadow: 0 0 15px rgba(124, 58, 237, 0.8);
+    transition: all 0.3s;
+  }
+.header a:hover {
+    box-shadow: 0 0 25px rgba(168, 85, 247, 1), 0 0 40px rgba(168, 85, 247, 0.6);
+    transform: scale(1.05);
+  }
+.post-box,.post {
+    background: #1a0a2e;
+    padding: 18px;
+    border-radius: 16px;
+    margin-bottom: 18px;
+    border: 1px solid #7c3aed;
+    box-shadow: 0 0 15px rgba(124, 58, 237, 0.4);
+  }
+  textarea, input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #7c3aed;
+    border-radius: 8px;
+    margin-top: 10px;
+    box-sizing: border-box;
+    font-family: inherit;
+    background: #0a0014;
+    color: #e0e0e0;
+    outline: none;
+  }
+  textarea:focus, input:focus {
+    box-shadow: 0 0 15px rgba(168, 85, 247, 0.6);
+    border-color: #a855f7;
+  }
+  button {
+    background: #7c3aed;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 12px;
+    font-weight: 700;
+    box-shadow: 0 0 15px rgba(124, 58, 237, 0.8);
+    transition: all 0.3s;
+  }
+  button:hover {
+    background: #a855f7;
+    box-shadow: 0 0 25px rgba(168, 85, 247, 1), 0 0 40px rgba(168, 85, 247, 0.6);
+    transform: translateY(-2px);
+  }
+.actions {
+    display: flex;
+    gap: 18px;
+    margin-top: 14px;
+    color: #c084fc;
+  }
+.actions span {
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s;
+  }
+.actions span:hover {
+    text-shadow: 0 0 10px #a855f7;
+    transform: scale(1.1);
+  }
+.comment {
+    background: #0a0014;
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 8px;
+    font-size: 14px;
+    border: 1px solid #4c1d95;
+  }
+.delete {
+    color: #f87171;
+    cursor: pointer;
+    float: left;
+    font-size: 14px;
+    text-shadow: 0 0 10px #ef4444;
+  }
+.time {
+    color: #8b5cf6;
+    font-size: 12px;
+    margin-top: 6px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h2>صفحة الأستاذ</h2>
+    <a href="https://classroom.google.com" target="_blank">ادخل على جوجل كلاس روم</a>
+  </div>
+
+  <div class="post-box">
+    <textarea id="postText" placeholder="اكتب بوست هنا..." rows="3"></textarea>
+    <input type="password" id="pass" placeholder="كلمة السر">
+    <button onclick="publishPost()">نشر</button>
+  </div>
+
+  <div id="posts">جاري التحميل...</div>
+</div>
+
+<script>
+const REPO = "anwrwjyh759-del/mester-been"; // اتحطت خلاص
+const ADMIN_PASS = "250746"; // كلمة السر هنا
+const PASS_KEY = "teacher_pass";
+
+async function loadPosts() {
+  try {
+    let res = await fetch(`https://raw.githubusercontent.com/${REPO}/main/data/posts.json?ts=${Date.now()}`);
+    let posts = res.ok? await res.json() : [];
+    renderPosts(posts);
+  } catch {
+    document.getElementById('posts').innerHTML = "<div style='text-align:center; color:#8b5cf6;'>مفيش بوستات لسه</div>";
+  }
+}
+
+function timeAgo(ts) {
+  let diff = Math.floor(Date.now()/1000) - ts;
+  if (diff < 60) return "منذ لحظات";
+  if (diff < 3600) return `منذ ${Math.floor(diff/60)} دقيقة`;
+  if (diff < 86400) return `منذ ${Math.floor(diff/3600)} ساعة`;
+  return `منذ ${Math.floor(diff/86400)} يوم`;
+}
+
+function renderPosts(posts) {
+  if (!posts.length) {
+    document.getElementById('posts').innerHTML = "<div style='text-align:center; color:#8b5cf6;'>مفيش بوستات لسه</div>";
+    return;
+  }
+  let pass = localStorage.getItem(PASS_KEY);
+  let html = "";
+  posts.forEach((p, i) => {
+    html += `
+    <div class="post" id="post-${i}">
+      ${pass === ADMIN_PASS? `<span class="delete" onclick="deletePost(${i})">حذف</span>` : ""}
+      <div>${p.text.replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div>
+      <div class="time">${timeAgo(p.time)}</div>
+      <div class="actions">
+        <span onclick="likePost(${i})">❤️ ${p.likes}</span>
+        <span onclick="toggleComment(${i})">💬 ${p.comments.length}</span>
+        <span onclick="sharePost(${i})">🔗 مشاركة</span>
+      </div>
+      <div id="comments-${i}" style="display:none; margin-top:12px;">
+        ${p.comments.map(c => `<div class="comment">${c.replace(/</g,'&lt;')}</div>`).join("")}
+        <input placeholder="اكتب تعليق واضغط Enter" onkeydown="if(event.key==='Enter') addComment(${i}, this)">
+      </div>
+    </div>`;
+  });
+  document.getElementById('posts').innerHTML = html;
+}
+
+async function publishPost() {
+  let text = document.getElementById('postText').value.trim();
+  let pass = document.getElementById('pass').value.trim();
+  if (!text ||!pass) return alert("اكتب البوست وكلمة السر");
+  if (pass!== ADMIN_PASS) return alert("كلمة السر غلط");
+
+  localStorage.setItem(PASS_KEY, pass);
+
+  await fetch(`https://api.github.com/repos/${REPO}/actions/workflows/post.yml/dispatches`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ref: 'main', inputs: { text, action: 'add' } })
+  });
+  document.getElementById('postText').value = "";
+  alert("جاري النشر... اعمل ريفريش بعد 10 ثواني");
+  setTimeout(loadPosts, 5000);
+}
+
+async function deletePost(i) {
+  await fetch(`https://api.github.com/repos/${REPO}/actions/workflows/post.yml/dispatches`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ref: 'main', inputs: { index: i, action: 'delete' } })
+  });
+  setTimeout(loadPosts, 3000);
+}
+
+async function likePost(i) {
+  await fetch(`https://api.github.com/repos/${REPO}/actions/workflows/post.yml/dispatches`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ref: 'main', inputs: { index: i, action: 'like' } })
+  });
+  setTimeout(loadPosts, 2000);
+}
+
+async function addComment(i, el) {
+  let text = el.value.trim();
+  if (!text) return;
+  await fetch(`https://api.github.com/repos/${REPO}/actions/workflows/post.yml/dispatches`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ref: 'main', inputs: { index: i, text, action: 'comment' } })
+  });
+  el.value = "";
+  setTimeout(loadPosts, 2000);
+}
+
+function toggleComment(i) {
+  let div = document.getElementById(`comments-${i}`);
+  div.style.display = div.style.display === 'none'? 'block' : 'none';
+}
+
+function sharePost(i) {
+  let url = location.href.split('#')[0] + '#post-' + i;
+  navigator.clipboard.writeText(url);
+  alert("اتنسخ اللينك");
+}
+
+loadPosts();
+</script>
+</body>
+</html>

@@ -3,7 +3,6 @@ on:
   workflow_dispatch:
     inputs:
       text: { description: 'Post text or comment', required: false }
-      pass: { description: 'Password', required: true }
       action: { description: 'add/delete/like/comment', required: true }
       index: { description: 'Post index', required: false }
 
@@ -14,12 +13,6 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-
-      - name: Check password
-        run: |
-          if [ "${{ inputs.pass }}"!= "${{ secrets.POST_PASS }}" ]; then
-            echo "Wrong password"; exit 1;
-          fi
 
       - name: Update posts.json
         run: |
